@@ -50,17 +50,29 @@ export const useData = () => {
 };
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [assets, setAssets] = useState<Asset[]>(INITIAL_ASSETS);
-  const [consumables, setConsumables] = useState<Consumable[]>(INITIAL_CONSUMABLES);
-  const [vendors, setVendors] = useState<Vendor[]>(INITIAL_VENDORS);
-  const [issueLog, setIssueLog] = useState<IssueRecord[]>(INITIAL_ISSUES);
-  const [maintenanceLog, setMaintenanceLog] = useState<MaintenanceRecord[]>(INITIAL_MAINTENANCE);
-  const [studentRequests, setStudentRequests] = useState<StudentRequest[]>(INITIAL_REQUESTS);
-  const [auditLog, setAuditLog] = useState<AuditRecord[]>(INITIAL_AUDITS);
-  const [consumableTransactions, setConsumableTransactions] = useState<ConsumableTransaction[]>(INITIAL_CONSUMABLE_TRANSACTIONS);
-  const [notices] = useState<Notice[]>(INITIAL_NOTICES);
-  const [studyMaterials] = useState<StudyMaterial[]>(INITIAL_MATERIALS);
-  const [students] = useState<StudentProfile[]>(INITIAL_STUDENTS);
+  // Helper to load from localStorage
+  const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+    const stored = localStorage.getItem(key);
+    if (!stored) return defaultValue;
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error(`Error parsing ${key} from storage:`, e);
+      return defaultValue;
+    }
+  };
+
+  const [assets, setAssets] = useState<Asset[]>(() => loadFromStorage('reva_assets', INITIAL_ASSETS));
+  const [consumables, setConsumables] = useState<Consumable[]>(() => loadFromStorage('reva_consumables', INITIAL_CONSUMABLES));
+  const [vendors, setVendors] = useState<Vendor[]>(() => loadFromStorage('reva_vendors', INITIAL_VENDORS));
+  const [issueLog, setIssueLog] = useState<IssueRecord[]>(() => loadFromStorage('reva_issueLog', INITIAL_ISSUES));
+  const [maintenanceLog, setMaintenanceLog] = useState<MaintenanceRecord[]>(() => loadFromStorage('reva_maintenanceLog', INITIAL_MAINTENANCE));
+  const [studentRequests, setStudentRequests] = useState<StudentRequest[]>(() => loadFromStorage('reva_studentRequests', INITIAL_REQUESTS));
+  const [auditLog, setAuditLog] = useState<AuditRecord[]>(() => loadFromStorage('reva_auditLog', INITIAL_AUDITS));
+  const [consumableTransactions, setConsumableTransactions] = useState<ConsumableTransaction[]>(() => loadFromStorage('reva_consumableTransactions', INITIAL_CONSUMABLE_TRANSACTIONS));
+  const [notices, setNotices] = useState<Notice[]>(() => loadFromStorage('reva_notices', INITIAL_NOTICES));
+  const [studyMaterials, setStudyMaterials] = useState<StudyMaterial[]>(() => loadFromStorage('reva_studyMaterials', INITIAL_MATERIALS));
+  const [students, setStudents] = useState<StudentProfile[]>(() => loadFromStorage('reva_students', INITIAL_STUDENTS));
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   
   const [currentUser, setCurrentUser] = useState<User>({
@@ -138,6 +150,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     setNotifications(newNotifications);
   }, [studentRequests, consumables]);
+
+  // Persistence Effects
+  useEffect(() => { localStorage.setItem('reva_assets', JSON.stringify(assets)); }, [assets]);
+  useEffect(() => { localStorage.setItem('reva_consumables', JSON.stringify(consumables)); }, [consumables]);
+  useEffect(() => { localStorage.setItem('reva_vendors', JSON.stringify(vendors)); }, [vendors]);
+  useEffect(() => { localStorage.setItem('reva_issueLog', JSON.stringify(issueLog)); }, [issueLog]);
+  useEffect(() => { localStorage.setItem('reva_maintenanceLog', JSON.stringify(maintenanceLog)); }, [maintenanceLog]);
+  useEffect(() => { localStorage.setItem('reva_studentRequests', JSON.stringify(studentRequests)); }, [studentRequests]);
+  useEffect(() => { localStorage.setItem('reva_auditLog', JSON.stringify(auditLog)); }, [auditLog]);
+  useEffect(() => { localStorage.setItem('reva_consumableTransactions', JSON.stringify(consumableTransactions)); }, [consumableTransactions]);
+  useEffect(() => { localStorage.setItem('reva_notices', JSON.stringify(notices)); }, [notices]);
+  useEffect(() => { localStorage.setItem('reva_studyMaterials', JSON.stringify(studyMaterials)); }, [studyMaterials]);
+  useEffect(() => { localStorage.setItem('reva_students', JSON.stringify(students)); }, [students]);
 
   const addAsset = (asset: Asset) => setAssets([...assets, asset]);
   const updateAsset = (id: string, updates: Partial<Asset>) => {

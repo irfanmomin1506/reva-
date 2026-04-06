@@ -30,36 +30,41 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
     setError('');
     
     try {
-      // Mock validation for demo purposes
+      // 1. Mock validation for demo purposes (Fastest)
       if (email === 'admin@reva.edu.in' && password === 'admin') {
         console.log('Mock Admin Login successful');
         onLogin();
         return;
       }
 
+      // 2. Try Firebase Login first (Usually more reliable in this environment)
+      try {
+        const firebaseResult = await signInWithEmailAndPassword(auth, email, password);
+        console.log('Firebase Login successful:', firebaseResult.user.email);
+        onLogin();
+        return;
+      } catch (firebaseErr: any) {
+        console.warn('Firebase login failed, trying Supabase...', firebaseErr.message);
+        // Continue to Supabase if Firebase fails
+      }
+
+      // 3. Try Supabase Login as secondary
       const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (supabaseError) {
-        // If Supabase fails, try Firebase as a fallback (if you have users there)
-        console.warn('Supabase login failed, attempting Firebase fallback...');
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-          onLogin();
-          return;
-        } catch (firebaseErr) {
-          throw supabaseError; // Throw original Supabase error if fallback also fails
-        }
+        throw supabaseError;
       }
 
       console.log('Supabase Login successful:', data);
       onLogin();
     } catch (err: any) {
       console.error('Login Error Detail:', err);
-      if (err.message === 'Failed to fetch') {
-        setError('Network Error: Could not connect to the authentication server. Please check your internet or verify your Supabase API keys.');
+      // If it's a network error from Supabase and we already tried Firebase
+      if (err.message === 'Failed to fetch' || err.message?.includes('Network')) {
+        setError('Authentication server unreachable. Please use the "Demo Login" or check your connection.');
       } else {
         setError(err.message || 'Invalid credentials. Please try again.');
       }
