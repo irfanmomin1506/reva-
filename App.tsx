@@ -15,12 +15,14 @@ import { VeoLab } from './components/VeoLab';
 import { KeyRound, Mail, AlertCircle, School, Chrome } from 'lucide-react';
 import { auth, googleProvider } from './firebase';
 import { signInWithPopup, onAuthStateChanged, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { supabase } from './services/supabase';
 
 const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({ onLogin, onStudentPortal }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,17 +30,56 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
     setError('');
     
     try {
-      // For Reva IMS, we might want to restrict to @reva.edu.in
-      if (!email.endsWith('@reva.edu.in')) {
-        setError('Please use your official Reva University email.');
-        setLoading(false);
-        return;
+      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (supabaseError) {
+        // If Supabase fails, try Firebase as a fallback (if you have users there)
+        console.warn('Supabase login failed, attempting Firebase fallback...');
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          onLogin();
+          return;
+        } catch (firebaseErr) {
+          throw supabaseError; // Throw original Supabase error if fallback also fails
+        }
       }
 
-      await signInWithEmailAndPassword(auth, email, password);
+      console.log('Supabase Login successful:', data);
       onLogin();
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials. Please try again.');
+      console.error('Login Error Detail:', err);
+      if (err.message === 'Failed to fetch') {
+        setError('Network Error: Could not connect to the authentication server. Please check your internet or verify your Supabase API keys.');
+      } else {
+        setError(err.message || 'Invalid credentials. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      alert("Signup successful! Please check your email for verification.");
+      setIsSignUp(false);
+    } catch (err: any) {
+      setError(err.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -48,17 +89,8 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
     setLoading(true);
     setError('');
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      
-      // Check if it's a Reva email
-      if (user.email && user.email.endsWith('@reva.edu.in')) {
-        onLogin();
-      } else {
-        // If not a Reva email, sign out and show error
-        await signOut(auth);
-        setError('Access restricted to Reva University faculty (@reva.edu.in).');
-      }
+      await signInWithPopup(auth, googleProvider);
+      onLogin();
     } catch (err: any) {
       setError(err.message || 'Google Login failed. Please try again.');
     } finally {
@@ -75,7 +107,7 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md z-10 border-t-4 border-reva-orange">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-extrabold text-reva-navy">REVA <span className="text-reva-orange">IMS</span></h1>
-            <p className="text-gray-500 mt-2">Faculty Login Portal</p>
+            <p className="text-gray-500 mt-2">{isSignUp ? 'Create Faculty Account' : 'Faculty Login Portal'}</p>
           </div>
 
           {error && (
@@ -84,9 +116,9 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reva Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
                 <input 
@@ -94,7 +126,7 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-reva-navy focus:border-transparent outline-none transition-all"
-                  placeholder="faculty@reva.edu.in"
+                  placeholder="faculty@example.com"
                 />
               </div>
             </div>
@@ -119,9 +151,18 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
               disabled={loading}
               className="w-full bg-reva-navy text-white font-bold py-3 rounded-lg hover:bg-blue-900 transition-colors shadow-lg shadow-blue-900/30 disabled:opacity-50"
             >
-              {loading ? 'Processing...' : 'Secure Login'}
+              {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Secure Login')}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button 
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-reva-navy hover:text-reva-orange font-medium"
+            >
+              {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign Up"}
+            </button>
+          </div>
 
           <div className="mt-6">
             <div className="relative">
@@ -161,21 +202,34 @@ const MainApp: React.FC = () => {
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email?.endsWith('@reva.edu.in')) {
+    // Firebase auth state
+    const unsubscribeFirebase = onAuthStateChanged(auth, (user) => {
+      if (user) {
         setIsAuthenticated(true);
-      } else {
+        setIsAuthReady(true);
+      }
+    });
+
+    // Supabase auth state
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setIsAuthenticated(true);
+      } else if (!auth.currentUser) {
         setIsAuthenticated(false);
       }
       setIsAuthReady(true);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeFirebase();
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      await supabase.auth.signOut();
       setIsAuthenticated(false);
     } catch (err) {
       console.error('Logout error:', err);

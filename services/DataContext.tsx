@@ -4,6 +4,7 @@ import { Asset, Consumable, IssueRecord, MaintenanceRecord, Vendor, StudentReque
 import { INITIAL_ASSETS, INITIAL_CONSUMABLES, INITIAL_ISSUES, INITIAL_MAINTENANCE, INITIAL_REQUESTS, INITIAL_VENDORS, INITIAL_AUDITS, INITIAL_CONSUMABLE_TRANSACTIONS, INITIAL_NOTICES, INITIAL_MATERIALS, INITIAL_STUDENTS } from '../constants';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { supabase } from './supabase';
 
 interface DataContextType {
   assets: Asset[];
@@ -71,16 +72,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    // Firebase auth state
+    const unsubscribeFirebase = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setCurrentUser({
           id: firebaseUser.uid,
           name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Faculty User',
           email: firebaseUser.email || '',
           phone: firebaseUser.phoneNumber || '',
-          role: 'faculty', // Default role for logged in users
+          role: 'faculty',
         });
-      } else {
+      }
+    });
+
+    // Supabase auth state
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Faculty User',
+          email: session.user.email || '',
+          phone: session.user.phone || '',
+          role: 'faculty',
+        });
+      } else if (!auth.currentUser) {
         setCurrentUser({
           id: 'guest',
           name: 'Guest User',
@@ -91,7 +106,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeFirebase();
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
