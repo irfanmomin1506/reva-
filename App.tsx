@@ -30,6 +30,13 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
     setError('');
     
     try {
+      // Mock validation for demo purposes
+      if (email === 'admin@reva.edu.in' && password === 'admin') {
+        console.log('Mock Admin Login successful');
+        onLogin();
+        return;
+      }
+
       const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -153,6 +160,16 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
             >
               {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Secure Login')}
             </button>
+            
+            {!isSignUp && (
+              <button 
+                type="button"
+                onClick={onLogin}
+                className="w-full bg-gray-100 text-reva-navy font-bold py-3 rounded-lg hover:bg-gray-200 transition-colors border border-gray-200"
+              >
+                Demo Login (Bypass Auth)
+              </button>
+            )}
           </form>
 
           <div className="mt-4 text-center">
