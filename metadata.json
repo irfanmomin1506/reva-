@@ -1,0 +1,7 @@
+{
+  "name": "Reva IMS",
+  "description": "Reva University Lab Inventory Management System - A comprehensive solution for tracking lab assets, consumables, maintenance, and student requests.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
