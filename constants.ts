@@ -20,7 +20,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.WORKING,
     price: 34500,
     lastUpdated: '2024-01-10',
-    image: 'https://media.digikey.com/photos/Tektronix/TBS1052B.jpg'
+    image: 'https://picsum.photos/seed/oscilloscope/800/600'
   },
   {
     id: 'A002',
@@ -39,7 +39,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.AVAILABLE,
     price: 48000,
     lastUpdated: '2024-02-15',
-    image: 'https://www.microscopeworld.com/images/Product/large/Olympus-CX23-Binocular-Microscope.jpg'
+    image: 'https://picsum.photos/seed/microscope/800/600'
   },
   {
     id: 'A003',
@@ -58,7 +58,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.WORKING,
     price: 42000,
     lastUpdated: '2024-03-01',
-    image: 'https://m.media-amazon.com/images/I/71YyP6o6D8L._AC_SL1500_.jpg'
+    image: 'https://picsum.photos/seed/multimeter/800/600'
   },
   {
     id: 'A004',
@@ -78,7 +78,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.AVAILABLE,
     price: 78000,
     lastUpdated: '2024-04-12',
-    image: 'https://www.prusa3d.com/content/images/product/default/210.jpg'
+    image: 'https://picsum.photos/seed/3dprinter/800/600'
   },
   {
     id: 'A005',
@@ -97,7 +97,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.WORKING,
     price: 1800,
     lastUpdated: '2024-05-01',
-    image: 'https://m.media-amazon.com/images/I/71C796qI2PL._AC_SL1500_.jpg'
+    image: 'https://picsum.photos/seed/arduino/800/600'
   },
   {
     id: 'A006',
@@ -116,7 +116,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.WORKING,
     price: 550000,
     lastUpdated: '2024-01-20',
-    image: 'https://www.epiloglaser.com/images/products/fusion-edge/fusion-edge-12-34.jpg'
+    image: 'https://picsum.photos/seed/lasercutter/800/600'
   }
 ];
 

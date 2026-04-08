@@ -4,6 +4,38 @@ import { useData } from '../services/DataContext';
 import { Asset, AssetCategory, AssetStatus } from '../types';
 import { Search, Plus, Eye, X, History, ClipboardList, ShoppingBag, Camera, Upload, Image as ImageIcon, Tag, MapPin, DollarSign, Edit2, Save, RefreshCw } from 'lucide-react';
 
+const compressImage = (dataUrl: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 800;
+      const MAX_HEIGHT = 600;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = dataUrl;
+  });
+};
+
 export const Inventory: React.FC = () => {
   const { assets, addAsset } = useData();
   const [searchTerm, setSearchTerm] = useState('');
@@ -182,19 +214,20 @@ const AssetDetailModal: React.FC<{ asset: Asset, onClose: () => void }> = ({ ass
         }
       };
     
-      const capturePhoto = () => {
-        if (videoRef.current && canvasRef.current) {
-          const context = canvasRef.current.getContext('2d');
-          if (context) {
-            canvasRef.current.width = videoRef.current.videoWidth;
-            canvasRef.current.height = videoRef.current.videoHeight;
-            context.drawImage(videoRef.current, 0, 0);
-            const dataUrl = canvasRef.current.toDataURL('image/png');
-            setPreviewImage(dataUrl);
-            stopCamera();
-          }
-        }
-      };
+  const capturePhoto = async () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0);
+        const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.8);
+        const compressed = await compressImage(dataUrl);
+        setPreviewImage(compressed);
+        stopCamera();
+      }
+    }
+  };
     
       const stopCamera = () => {
         if (videoRef.current && videoRef.current.srcObject) {
@@ -209,8 +242,9 @@ const AssetDetailModal: React.FC<{ asset: Asset, onClose: () => void }> = ({ ass
         const file = e.target.files?.[0];
         if (file) {
           const reader = new FileReader();
-          reader.onloadend = () => {
-            setPreviewImage(reader.result as string);
+          reader.onloadend = async () => {
+            const compressed = await compressImage(reader.result as string);
+            setPreviewImage(compressed);
           };
           reader.readAsDataURL(file);
         }
@@ -312,7 +346,16 @@ const AssetDetailModal: React.FC<{ asset: Asset, onClose: () => void }> = ({ ass
                                 </div>
                            )}
 
-                           <div className="flex justify-end gap-3 pt-2 border-t border-gray-200">
+                            <div className="flex justify-end gap-3 pt-2 border-t border-gray-200">
+                               <button 
+                                  onClick={() => {
+                                    updateAsset(asset.id, { image: '' });
+                                    setIsEditingPhoto(false);
+                                  }}
+                                  className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors mr-auto"
+                               >
+                                 Remove Photo
+                               </button>
                                <button onClick={handleCancelEdit} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
                                <button 
                                   onClick={handleSavePhoto}
@@ -460,15 +503,16 @@ const AddAssetModal: React.FC<{ onClose: () => void, onAdd: (a: Asset) => void }
     }
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0);
-        const dataUrl = canvasRef.current.toDataURL('image/png');
-        setFormData({ ...formData, image: dataUrl });
+        const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.8);
+        const compressed = await compressImage(dataUrl);
+        setFormData({ ...formData, image: compressed });
         stopCamera();
       }
     }
@@ -487,8 +531,9 @@ const AddAssetModal: React.FC<{ onClose: () => void, onAdd: (a: Asset) => void }
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, image: reader.result as string });
+      reader.onloadend = async () => {
+        const compressed = await compressImage(reader.result as string);
+        setFormData({ ...formData, image: compressed });
       };
       reader.readAsDataURL(file);
     }
