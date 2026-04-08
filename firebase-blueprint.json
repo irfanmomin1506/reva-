@@ -1,0 +1,193 @@
+{
+  "entities": {
+    "Asset": {
+      "title": "Asset",
+      "description": "Inventory item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string" },
+        "condition": { "type": "string" },
+        "location": { "type": "string" },
+        "purchaseDate": { "type": "string" },
+        "price": { "type": "number" },
+        "quantity": { "type": "number" },
+        "quantityAvailable": { "type": "number" },
+        "image": { "type": "string", "description": "Base64 encoded image string" },
+        "lastAuditDate": { "type": "string" },
+        "vendorId": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "status", "condition", "location", "quantity", "quantityAvailable"]
+    },
+    "Consumable": {
+      "title": "Consumable",
+      "description": "Lab supplies",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "currentStock": { "type": "number" },
+        "minThreshold": { "type": "number" },
+        "unit": { "type": "string" },
+        "lastRefillDate": { "type": "string" },
+        "location": { "type": "string" }
+      },
+      "required": ["id", "name", "currentStock", "minThreshold", "unit"]
+    },
+    "Vendor": {
+      "title": "Vendor",
+      "description": "Equipment supplier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "contact": { "type": "string" },
+        "email": { "type": "string" },
+        "category": { "type": "string" },
+        "rating": { "type": "number" }
+      },
+      "required": ["id", "name", "contact", "email"]
+    },
+    "IssueRecord": {
+      "title": "IssueRecord",
+      "description": "Record of asset issuance",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentName": { "type": "string" },
+        "usn": { "type": "string" },
+        "assetId": { "type": "string" },
+        "assetName": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "expectedReturnDate": { "type": "string" },
+        "actualReturnDate": { "type": "string" },
+        "status": { "type": "string" },
+        "conditionOnReturn": { "type": "string" }
+      },
+      "required": ["id", "studentName", "usn", "assetId", "issueDate", "status"]
+    },
+    "MaintenanceRecord": {
+      "title": "MaintenanceRecord",
+      "description": "Asset maintenance log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "assetId": { "type": "string" },
+        "assetName": { "type": "string" },
+        "issue": { "type": "string" },
+        "reportDate": { "type": "string" },
+        "repairDate": { "type": "string" },
+        "status": { "type": "string" },
+        "cost": { "type": "number" },
+        "type": { "type": "string" }
+      },
+      "required": ["id", "assetId", "issue", "reportDate", "status", "type"]
+    },
+    "StudentRequest": {
+      "title": "StudentRequest",
+      "description": "Request from student for equipment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentName": { "type": "string" },
+        "usn": { "type": "string" },
+        "assetId": { "type": "string" },
+        "assetName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "purpose": { "type": "string" },
+        "requestDate": { "type": "string" },
+        "expectedReturnDate": { "type": "string" },
+        "status": { "type": "string" },
+        "rejectionReason": { "type": "string" }
+      },
+      "required": ["id", "studentName", "usn", "assetId", "quantity", "purpose", "requestDate", "status"]
+    },
+    "AuditRecord": {
+      "title": "AuditRecord",
+      "description": "Inventory audit entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "assetId": { "type": "string" },
+        "assetName": { "type": "string" },
+        "auditDate": { "type": "string" },
+        "auditedBy": { "type": "string" },
+        "condition": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "assetId", "auditDate", "auditedBy", "condition"]
+    },
+    "ConsumableTransaction": {
+      "title": "ConsumableTransaction",
+      "description": "Stock change for consumables",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "consumableId": { "type": "string" },
+        "consumableName": { "type": "string" },
+        "type": { "type": "string" },
+        "quantity": { "type": "number" },
+        "date": { "type": "string" },
+        "performedBy": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "consumableId", "type", "quantity", "date", "performedBy"]
+    },
+    "Notice": {
+      "title": "Notice",
+      "description": "Departmental announcement",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "date": { "type": "string" },
+        "priority": { "type": "string" }
+      },
+      "required": ["id", "title", "content", "date", "priority"]
+    },
+    "StudyMaterial": {
+      "title": "StudyMaterial",
+      "description": "Lab resource or manual",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "type": { "type": "string" },
+        "url": { "type": "string" }
+      },
+      "required": ["id", "title", "category", "type", "url"]
+    },
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Student information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "usn": { "type": "string" },
+        "email": { "type": "string" },
+        "department": { "type": "string" },
+        "semester": { "type": "number" }
+      },
+      "required": ["id", "name", "usn", "email"]
+    }
+  },
+  "firestore": {
+    "assets": { "schema": "Asset", "description": "Inventory assets" },
+    "consumables": { "schema": "Consumable", "description": "Lab consumables" },
+    "vendors": { "schema": "Vendor", "description": "Equipment vendors" },
+    "issueLog": { "schema": "IssueRecord", "description": "Asset issue/return history" },
+    "maintenanceLog": { "schema": "MaintenanceRecord", "description": "Maintenance history" },
+    "studentRequests": { "schema": "StudentRequest", "description": "Student equipment requests" },
+    "auditLog": { "schema": "AuditRecord", "description": "Inventory audit logs" },
+    "consumableTransactions": { "schema": "ConsumableTransaction", "description": "Consumable stock changes" },
+    "notices": { "schema": "Notice", "description": "Department notices" },
+    "studyMaterials": { "schema": "StudyMaterial", "description": "Lab study materials" },
+    "students": { "schema": "StudentProfile", "description": "Student profiles" }
+  }
+}

@@ -30,14 +30,7 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
     setError('');
     
     try {
-      // 1. Mock validation for demo purposes (Fastest)
-      if (email === 'admin@reva.edu.in' && password === 'admin') {
-        console.log('Mock Admin Login successful');
-        onLogin();
-        return;
-      }
-
-      // 2. Try Firebase Login first (Usually more reliable in this environment)
+      // 1. Try Firebase Login first (Usually more reliable in this environment)
       try {
         const firebaseResult = await signInWithEmailAndPassword(auth, email, password);
         console.log('Firebase Login successful:', firebaseResult.user.email);
@@ -64,7 +57,7 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
       console.error('Login Error Detail:', err);
       // If it's a network error from Supabase and we already tried Firebase
       if (err.message === 'Failed to fetch' || err.message?.includes('Network')) {
-        setError('Authentication server unreachable. Please use the "Demo Login" or check your connection.');
+        setError('Authentication server unreachable. Please check your connection.');
       } else {
         setError(err.message || 'Invalid credentials. Please try again.');
       }
@@ -165,16 +158,6 @@ const Login: React.FC<{ onLogin: () => void, onStudentPortal: () => void }> = ({
             >
               {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Secure Login')}
             </button>
-            
-            {!isSignUp && (
-              <button 
-                type="button"
-                onClick={onLogin}
-                className="w-full bg-gray-100 text-reva-navy font-bold py-3 rounded-lg hover:bg-gray-200 transition-colors border border-gray-200"
-              >
-                Demo Login (Bypass Auth)
-              </button>
-            )}
           </form>
 
           <div className="mt-4 text-center">
