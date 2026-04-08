@@ -20,7 +20,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.WORKING,
     price: 34500,
     lastUpdated: '2024-01-10',
-    image: 'https://picsum.photos/seed/oscilloscope/800/600'
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg"
   },
   {
     id: 'A002',
