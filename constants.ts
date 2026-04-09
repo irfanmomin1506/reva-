@@ -20,7 +20,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.WORKING,
     price: 34500,
     lastUpdated: '2024-01-10',
-    image: "https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg"
+   image: "https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg"
   },
   {
     id: 'A002',
@@ -97,7 +97,7 @@ export const INITIAL_ASSETS: Asset[] = [
     condition: AssetStatus.WORKING,
     price: 1800,
     lastUpdated: '2024-05-01',
-    image: 'https://picsum.photos/seed/arduino/800/600'
+    image: 'https://hfkyyjvfstfklmfzvcfb.supabase.co/storage/v1/object/public/revz%20img/Screenshot%202026-04-08%20223338.png'
   },
   {
     id: 'A006',

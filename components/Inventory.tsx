@@ -184,9 +184,10 @@ export const Inventory: React.FC = () => {
 };
 
 const AssetDetailModal: React.FC<{ asset: Asset, onClose: () => void }> = ({ asset, onClose }) => {
-    const { vendors, maintenanceLog, auditLog, updateAsset } = useData();
+    const { vendors, maintenanceLog, auditLog, updateAsset, uploadImage } = useData();
     const [isEditingPhoto, setIsEditingPhoto] = useState(false);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | undefined>(asset.image);
     
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -250,10 +251,23 @@ const AssetDetailModal: React.FC<{ asset: Asset, onClose: () => void }> = ({ ass
         }
       };
 
-      const handleSavePhoto = () => {
+      const handleSavePhoto = async () => {
         if (previewImage && previewImage !== asset.image) {
-            updateAsset(asset.id, { image: previewImage });
-            setIsEditingPhoto(false);
+            setIsUploading(true);
+            try {
+                let imageUrl = previewImage;
+                // If it's a data URL, upload it to storage
+                if (previewImage.startsWith('data:')) {
+                    const fileName = `assets/${asset.id}_${Date.now()}.jpg`;
+                    imageUrl = await uploadImage(fileName, previewImage);
+                }
+                updateAsset(asset.id, { image: imageUrl });
+                setIsEditingPhoto(false);
+            } catch (error) {
+                alert("Failed to upload image. Please try again.");
+            } finally {
+                setIsUploading(false);
+            }
         }
       };
 
@@ -359,10 +373,15 @@ const AssetDetailModal: React.FC<{ asset: Asset, onClose: () => void }> = ({ ass
                                <button onClick={handleCancelEdit} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
                                <button 
                                   onClick={handleSavePhoto}
-                                  disabled={previewImage === asset.image} 
-                                  className={`px-6 py-2 text-sm font-bold rounded-lg flex items-center shadow-sm transition-colors ${previewImage === asset.image ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-reva-orange text-white hover:bg-orange-600'}`}
+                                  disabled={previewImage === asset.image || isUploading} 
+                                  className={`px-6 py-2 text-sm font-bold rounded-lg flex items-center shadow-sm transition-colors ${previewImage === asset.image || isUploading ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-reva-orange text-white hover:bg-orange-600'}`}
                                 >
-                                   <Save size={16} className="mr-2" /> Save Photo
+                                   {isUploading ? (
+                                       <RefreshCw size={16} className="mr-2 animate-spin" />
+                                   ) : (
+                                       <Save size={16} className="mr-2" />
+                                   )}
+                                   {isUploading ? 'Uploading...' : 'Save Photo'}
                                </button>
                            </div>
                        </div>
@@ -467,7 +486,8 @@ const AssetDetailModal: React.FC<{ asset: Asset, onClose: () => void }> = ({ ass
 }
 
 const AddAssetModal: React.FC<{ onClose: () => void, onAdd: (a: Asset) => void }> = ({ onClose, onAdd }) => {
-  const { vendors } = useData();
+  const { vendors, uploadImage } = useData();
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState<Partial<Asset>>({
     name: '', category: AssetCategory.EQUIPMENT, subCategory: '', quantityTotal: 1, location: '', unit: 'pcs',
     serialNumber: '', condition: AssetStatus.AVAILABLE, price: 0, image: '', fundingSource: ''
@@ -476,16 +496,32 @@ const AddAssetModal: React.FC<{ onClose: () => void, onAdd: (a: Asset) => void }
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newAsset: Asset = {
-      ...formData,
-      id: `A${Math.floor(Math.random() * 10000)}`,
-      quantityAvailable: formData.quantityTotal || 0,
-      lastUpdated: new Date().toISOString().split('T')[0]
-    } as Asset;
-    onAdd(newAsset);
-    onClose();
+    setIsUploading(true);
+    try {
+      let imageUrl = formData.image || '';
+      const assetId = `A${Math.floor(Math.random() * 10000)}`;
+
+      if (imageUrl.startsWith('data:')) {
+        const fileName = `assets/${assetId}_${Date.now()}.jpg`;
+        imageUrl = await uploadImage(fileName, imageUrl);
+      }
+
+      const newAsset: Asset = {
+        ...formData,
+        id: assetId,
+        image: imageUrl,
+        quantityAvailable: formData.quantityTotal || 0,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      } as Asset;
+      onAdd(newAsset);
+      onClose();
+    } catch (error) {
+      alert("Failed to save asset. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const startCamera = async () => {
@@ -681,8 +717,11 @@ const AddAssetModal: React.FC<{ onClose: () => void, onAdd: (a: Asset) => void }
           </div>
           
           <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
-            <button type="submit" className="px-6 py-2.5 bg-reva-orange text-white rounded-lg hover:bg-orange-600 font-bold shadow-sm transition-colors">Save Asset</button>
+            <button type="button" onClick={onClose} disabled={isUploading} className="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
+            <button type="submit" disabled={isUploading} className="px-6 py-2.5 bg-reva-orange text-white rounded-lg hover:bg-orange-600 font-bold shadow-sm transition-colors flex items-center">
+                {isUploading && <RefreshCw size={18} className="mr-2 animate-spin" />}
+                {isUploading ? 'Saving...' : 'Save Asset'}
+            </button>
           </div>
         </form>
       </div>

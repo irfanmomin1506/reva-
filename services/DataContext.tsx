@@ -5,6 +5,8 @@ import { INITIAL_ASSETS, INITIAL_CONSUMABLES, INITIAL_ISSUES, INITIAL_MAINTENANC
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 import { supabase } from './supabase';
 
 enum OperationType {
@@ -84,6 +86,7 @@ interface DataContextType {
   
   addConsumableTransaction: (transaction: ConsumableTransaction) => void;
   updateCurrentUser: (updates: Partial<User>) => void;
+  uploadImage: (path: string, dataUrl: string) => Promise<string>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -406,11 +409,24 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateCurrentUser = (updates: Partial<User>) => setCurrentUser(prev => ({ ...prev, ...updates }));
 
+  const uploadImage = async (path: string, dataUrl: string): Promise<string> => {
+    try {
+      const storageRef = ref(storage, path);
+      // We use uploadString for Base64 dataUrls
+      await uploadString(storageRef, dataUrl, 'data_url');
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
   return (
     <DataContext.Provider value={{
       assets, consumables, vendors, issueLog, maintenanceLog, studentRequests, auditLog, consumableTransactions, notifications, notices, studyMaterials, students, currentUser,
       addAsset, updateAsset, issueItem, returnItem, addStudentRequest, processStudentRequest,
-      reportMaintenance, completeMaintenance, addAuditRecord, addConsumableTransaction, updateCurrentUser
+      reportMaintenance, completeMaintenance, addAuditRecord, addConsumableTransaction, updateCurrentUser, uploadImage
     }}>
       {children}
     </DataContext.Provider>
